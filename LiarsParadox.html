@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=2.0">
+  <title>谁是卧底 · 问答版</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    :root {
+      --primary: #66CCFF;
+      --primary-rgb: 102, 204, 255;
+      --bg: #ffffff;
+      --text: #2c3e50;
+      --card-bg: #ffffff;
+      --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      --border: #e0e7ef;
+      --button-text: #ffffff;
+      --hover-light: rgba(102, 204, 255, 0.12);
+      --modal-overlay: rgba(0, 0, 0, 0.4);
+    }
+    body.dark {
+      --bg: #1a1a2e;
+      --text: #e0e0e0;
+      --card-bg: #252540;
+      --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      --border: #3e3e5c;
+      --button-text: #ffffff;
+      --hover-light: rgba(102, 204, 255, 0.18);
+      --modal-overlay: rgba(0, 0, 0, 0.7);
+    }
+    body {
+      font-family: 'Segoe UI', 'Roboto', 'Noto Sans', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: background 0.3s, color 0.3s;
+      padding: 1rem;
+    }
+    #app {
+      width: 100%;
+      max-width: 600px;
+      background: var(--card-bg);
+      border-radius: 2.5rem;
+      box-shadow: var(--card-shadow);
+      padding: 2rem 1.8rem;
+      transition: background 0.3s, box-shadow 0.3s;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .page {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+    .page.active {
+      display: flex;
+    }
+    h1 {
+      font-size: 3.2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), #8a84e2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+      letter-spacing: 2px;
+    }
+    .subtitle {
+      font-size: 1rem;
+      color: var(--text);
+      opacity: 0.7;
+      margin-bottom: 2rem;
+      letter-spacing: 1px;
+    }
+    .btn {
+      background: var(--primary);
+      border: none;
+      color: var(--button-text);
+      font-weight: 600;
+      padding: 0.9rem 2rem;
+      border-radius: 3rem;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.3s, box-shadow 0.2s;
+      box-shadow: 0 6px 16px rgba(var(--primary-rgb), 0.35);
+      margin: 0.45rem 0;
+      width: 100%;
+      max-width: 260px;
+      text-align: center;
+      letter-spacing: 0.5px;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 22px rgba(var(--primary-rgb), 0.45);
+    }
+    .btn.outline {
+      background: transparent;
+      border: 2px solid var(--primary);
+      color: var(--primary);
+      box-shadow: none;
+    }
+    .btn.outline:hover {
+      background: var(--hover-light);
+    }
+    .btn.small {
+      padding: 0.6rem 1.5rem;
+      font-size: 0.95rem;
+      max-width: 160px;
+    }
+    .btn-group {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: 1.2rem 0;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 1.8rem;
+      padding: 1.5rem;
+      margin: 1rem 0;
+      width: 100%;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+    .number-picker {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.8rem;
+      margin: 1.5rem 0;
+    }
+    .number-picker button {
+      background: var(--primary);
+      border: none;
+      color: white;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      font-size: 1.8rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(var(--primary-rgb), 0.4);
+      transition: 0.2s;
+    }
+    .number-picker button:active {
+      transform: scale(0.92);
+    }
+    .number-display {
+      font-size: 2.8rem;
+      font-weight: 700;
+      min-width: 60px;
+      text-align: center;
+    }
+    .category-list {
+      max-height: 320px;
+      overflow-y: auto;
+      width: 100%;
+      padding-right: 0.3rem;
+      margin: 0.8rem 0;
+    }
+    .category-item {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin: 0.5rem 0;
+      font-size: 0.95rem;
+    }
+    .category-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary);
+    }
+    .word-reveal {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      letter-spacing: 2px;
+      margin: 0.8rem 0;
+      text-align: center;
+    }
+    .spy-message {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #f08c8c;
+    }
+    .player-hint {
+      font-size: 1.1rem;
+      opacity: 0.8;
+      margin: 0.6rem 0;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: var(--modal-overlay);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal.active {
+      display: flex;
+    }
+    .modal-content {
+      background: var(--card-bg);
+      border-radius: 2rem;
+      padding: 2rem;
+      max-width: 420px;
+      width: 90%;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      position: relative;
+    }
+    .close-modal {
+      position: absolute;
+      top: 1rem; right: 1.4rem;
+      font-size: 1.8rem;
+      cursor: pointer;
+      color: var(--text);
+      opacity: 0.6;
+    }
+    .theme-option {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin: 1.5rem 0;
+    }
+    .color-dot {
+      width: 36px; height: 36px; border-radius: 50%;
+      cursor: pointer; border: 3px solid transparent;
+      transition: 0.2s;
+    }
+    .color-dot.selected {
+      border-color: var(--text);
+      box-shadow: 0 0 12px currentColor;
+    }
+    .result-text {
+      font-size: 2.2rem;
+      font-weight: bold;
+      margin: 1rem 0;
+    }
+    .footer-note {
+      margin-top: 1.5rem;
+      font-size: 0.8rem;
+      opacity: 0.6;
+    }
+    hr {
+      width: 100%;
+      border: 0.5px solid var(--border);
+      margin: 1.2rem 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 首页 -->
+    <div id="homePage" class="page active">
+      <h1>谁是卧底</h1>
+      <div class="subtitle">✨ 问答版 · 猜词博弈 ✨</div>
+      <button class="btn" id="startGameBtn">开始游戏</button>
+      <button class="btn outline" id="rulesBtn">游戏规则</button>
+      <button class="btn outline" id="followBtn">关注作者</button>
+      <button class="btn outline small" id="settingsBtn">⚙️ 设置</button>
+      <div class="footer-note">版本号 v0.9.5</div>
+    </div>
+
+    <!-- 人数选择 -->
+    <div id="playersPage" class="page">
+      <h2 style="margin-bottom:1rem;">👥 选择玩家人数</h2>
+      <div class="number-picker">
+        <button id="minusBtn">−</button>
+        <span class="number-display" id="playerCountDisplay">3</span>
+        <button id="plusBtn">+</button>
+      </div>
+      <p style="opacity:0.7;">最少3人，最多20人</p>
+      <button class="btn" id="confirmPlayersBtn">确认人数</button>
+      <button class="btn outline small" id="backToHome1">← 返回</button>
+    </div>
+
+    <!-- 词条范围选择 -->
+    <div id="categoriesPage" class="page">
+      <h3 style="margin-bottom:0.5rem;">📚 词条范围</h3>
+      <p style="font-size:0.85rem; opacity:0.7;">勾选 = <strong>不要</strong> 该分类词条</p>
+      <div class="category-list" id="categoryListContainer"></div>
+      <div style="display:flex; gap:0.8rem; margin:0.5rem 0;">
+        <button class="btn outline small" id="resetExcludeBtn">重置排除</button>
+      </div>
+      <button class="btn" id="startGameAfterCategories">🎮 开始游戏</button>
+      <button class="btn outline small" id="backToPlayers">← 返回人数</button>
+    </div>
+
+    <!-- 查看词语阶段 -->
+    <div id="gameViewPage" class="page">
+      <div id="viewPrompt" class="player-hint"></div>
+      <div id="wordDisplayArea" style="display:none; flex-direction: column; align-items: center;">
+        <div id="civilianWordDisplay" class="word-reveal"></div>
+        <div id="spyWordDisplay" class="spy-message" style="display:none;"></div>
+        <p id="nextHint" style="margin-top:0.6rem; opacity:0.8;"></p>
+      </div>
+      <button class="btn" id="viewNextBtn">点击查看词语</button>
+    </div>
+
+    <!-- 讨论环节 -->
+    <div id="discussPage" class="page">
+      <div style="font-size:2rem; font-weight:bold; margin:1rem 0;">🗣️ 讨论环节！</div>
+      <p style="font-size:1.2rem; margin-bottom:1.5rem;">我们中出了一个叛徒！</p>
+      <button class="btn" id="findSpyBtn">🔍 我们找到他了！</button>
+      <button class="btn outline" id="guessWordBtn">💬 我知道你们在想什么！</button>
+    </div>
+
+    <!-- 结果页 -->
+    <div id="resultPage" class="page">
+      <div id="resultTitle" class="result-text"></div>
+      <p style="font-size:1.2rem;">本轮平民词：<strong id="revealWord" style="color:var(--primary);"></strong></p>
+      <div class="btn-group" style="margin-top:2rem;">
+        <button class="btn" id="playAgainBtn">🔄 再来一轮</button>
+        <button class="btn outline" id="homeAfterResult">🏠 回到首页</button>
+        <button class="btn outline small" id="followAfterResult">❤️ 关注作者</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 规则弹窗 -->
+  <div id="rulesModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" id="closeRules">&times;</span>
+      <h3>📖 游戏规则</h3>
+      <p style="margin-top:1rem; line-height:1.6;">
+        👥 多名玩家中有除一人外拿到<strong>相同的平民词</strong>，1人拿到<strong>空白卡片</strong>（卧底）。<br>
+        🗣️ 通过相互提问猜测谁是卧底。<br>
+        🔍 讨论后指认卧底，或猜出平民词。<br>
+        🏆 卧底隐藏到最后或猜对平民词则卧底胜，否则平民胜。
+      </p>
+    </div>
+  </div>
+
+  <!-- 设置弹窗 -->
+  <div id="settingsModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" id="closeSettings">&times;</span>
+      <h3>⚙️ 设置</h3>
+      <p style="margin-top:1rem;">主题色</p>
+      <div class="theme-option" id="themeColorPicker">
+        <div class="color-dot" style="background:#66CCFF;" data-color="#66CCFF"></div>
+        <div class="color-dot" style="background:#FAAFBE;" data-color="#FAAFBE"></div>
+      </div>
+      <p>明暗模式</p>
+      <div style="display:flex; gap:1rem; justify-content:center; margin:1rem 0;">
+        <button class="btn outline small" id="lightModeBtn">☀️ 浅色</button>
+        <button class="btn outline small" id="darkModeBtn">🌙 深色</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 选择指认玩家弹窗 -->
+  <div id="accuseModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" id="closeAccuse">&times;</span>
+      <h4>选择你认为是卧底的玩家</h4>
+      <div id="accusePlayerList" style="display:flex; flex-wrap:wrap; gap:0.6rem; margin:1.2rem 0; justify-content:center;"></div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // ---------- 词库数据 ----------
+      const rawData = `二次元分区·二游专区·原神
+旅行者, 派蒙, 钟离, 胡桃, 魈, 温迪, 雷神, 神里绫华, 神里绫人, 枫原万叶, 宵宫, 荒泷一斗, 纳西妲, 散兵, 白术, 卡维, 艾尔海森, 迪希雅, 赛诺, 提纳里, 可莉, 阿贝多, 甘雨, 申鹤, 行秋, 重云, 香菱, 班尼特, 雷泽, 菲谢尔, 芭芭拉, 琴, 迪卢克, 凯亚, 安柏, 丽莎, 诺艾尔, 砂糖, 罗莎莉亚, 米卡, 迪娜泽黛, 柯莱, 多莉, 坎蒂丝, 珐露珊, 莱依拉, 沙中净水, 海芭夏, 七圣召唤, 元素战技, 元素爆发, 元素精通, 暴击率, 暴击伤害, 元素充能效率, 圣遗物, 千岩牢固, 沉沦之心, 绝缘之旗印, 饰金之梦, 深林的记忆, 花海甘露池, 沙域馆, 星落湖, 蒙德, 璃月, 稻妻, 须弥, 枫丹, 纳塔, 至冬, 坎瑞亚, 天空岛, 深渊, 风魔龙, 特瓦林, 北风狼, 安德留斯, 女士, 公子, 达达利亚, 钟离, 摩拉克斯, 温迪, 巴巴托斯, 雷神, 巴尔泽布, 纳西妲, 布耶尔, 冰之女皇, 水神, 芙宁娜, 火神, 原粹树脂, 脆弱树脂, 摩拉, 原石, 纠缠之缘, 相遇之缘, 无相交响诗, 深境螺旋, 金苹果群岛, 层岩巨渊, 渊下宫, 鸣神岛, 神无冢, 八酝岛, 清籁岛, 海祇岛, 须弥城, 奥摩斯港, 化城郭, 禅那园, 枫丹廷, 沫芒宫, 白露湾, 厄里纳斯, 龙脊雪山, 声望系统, 探索度, 神樱大祓, 世界任务, 传说任务, 每日委托, 尘歌壶, 洞天, 摆设, 同伴, 信任等级, 仙力, 铁匠铺, 锻造台, 锻造武器, 原胚, 武器突破材料, 天赋升级材料, 角色突破材料, 摩拉袋, 背包, 宝箱, 普通宝箱, 精致宝箱, 珍贵宝箱, 华丽宝箱, 奇馈宝箱, 仙灵, 机关, 解谜, 传送锚点, 七天神像, 望风山地, 坠星山谷, 明冠山地, 苍风高地, 晨曦酒庄, 清泉镇, 迪卢克酒庄, 西风骑士团, 蒙德大教堂, 猎鹿人餐厅, 璃月港, 璃月七星, 天权星, 玉京台, 往生堂, 万民堂, 新月轩, 琉璃亭, 望舒客栈, 荻花洲, 轻策庄, 古云有螭, 海灯节, 逐月节, 稻妻城, 鸣神大社, 神里屋敷, 稻妻幕府, 天领奉行, 勘定奉行, 社奉行, 花见坂, 离岛, 鸣神海滩, 影向山, 八重神子, 神子, 狐狸, 宫司, 鸣神大社巫女, 神樱树, 神樱眷顾, 雷种子, 雷屏障, 御影炉心, 踏鞴砂, 神无冢, 八酝岛, 蛇骨矿洞, 无想刃狭间, 清籁岛, 清籁丸, 浅濑神社, 海祇岛, 珊瑚宫, 水月池, 奥罗巴斯, 蛇神, 祟神, 瘴晦瘤, 须弥, 大慈树王, 小吉祥草王, 世界树, 虚空, 教令院, 六大学派, 阿扎尔, 贤者, 沙漠, 赤王陵, 阿如村, 黄金梦乡, 舍身陷坑, 饱饮之丘, 风蚀地, 荼诃落谷, 恒那兰那, 兰那罗, 森林, 桓那兰那, 枫丹, 正义之神, 芙卡洛斯, 水之龙, 那维莱特, 美露莘, 厄里纳斯, 梅洛彼得堡, 枫丹科学院, 蒸汽鸟报, 刺玫会, 娜维娅, 克洛琳德, 夏沃蕾, 菲米尼, 琳妮特, 林尼, 魔术, 审判, 谕示机, 原始胎海之水, 枫丹白露, 白露湾, 黎翡区, 苍晶区, 丹枫, 伊黎耶岛, 安枫丹, 芒索斯山, 雪山, 纳塔, 火神, 玛薇卡, 龙, 龙裔, 火之龙, 纳塔部落, 温妮莎, 穆纳塔, 火山, 岩浆, 至冬, 冰之女皇, 愚人众, 执行官, 丑角, 皮耶罗, 博士, 多托雷, 少女, 哥伦比娅, 公鸡, 普契涅拉, 散兵, 流浪者, 公子, 达达利亚, 女士, 罗莎琳, 队长, 卡皮塔诺, 仆人, 阿蕾奇诺, 木偶, 桑多涅, 富人, 潘塔罗涅, 冬夜愚戏, 冰之神, 冰雪, 宫殿, 至冬城, 北国银行, 坎瑞亚, 黑潮, 黄金, 莱茵多特, 阿贝多, 杜林, 龙, 不死的黑龙, 坎瑞亚遗迹, 地底, 深渊教团, 深渊法师, 深渊使徒, 深渊魔物, 丘丘人, 史莱姆, 飘浮灵, 蕈兽, 遗迹守卫, 遗迹猎者, 遗迹巨蛇, 魔偶剑鬼, 黄金王兽, 黑蛇骑士, 黯色空壳, 圣骸兽, 掣电树, 翠翎恐蕈, 兆载永劫龙兽, 风蚀沙虫, 阿佩普, 沙虫, 龙, 元素生物, 单手剑, 双手剑, 长柄武器, 法器, 弓, 天空之刃, 风鹰剑, 狼的末路, 天空之傲, 和璞鸢, 贯虹之槊, 天空之脊, 四风原典, 天空之卷, 阿莫斯之弓, 天空之翼, 雾切之回光, 飞雷之弦振, 薙草之稻光, 磐岩结绿, 苍古自由之誓, 松籁响起之时, 不灭月华, 月华, 尘世之锁, 千夜浮梦, 猎人之径, 饰金之梦, 深林的记忆, 绝缘之旗印, 原神, 提瓦特, 米哈游, 开放世界, RPG, 抽卡, 养成, 探索, 解谜, 剧情
+二次元分区·二游专区·崩坏3
+琪亚娜, 芽衣, 布洛妮娅, 姬子, 德丽莎, 符华, 八重樱, 卡莲, 奥托, 瓦尔特, 齐格飞, 塞西莉亚, 阿波卡利斯, 天命, 逆熵, 崩坏, 崩坏能, 律者, 空之律者, 雷之律者, 风之律者, 火之律者, 冰之律者, 死之律者, 岩之律者, 支配之律者, 识之律者, 终焉之律者, 始源之律者, 女武神, 装甲, 白练, 圣女祈祷, 月光, 鬼铠, 影舞冲击, 强袭, 圣女, 山吹, 次元边界突破, 雪地狙击, 银狼的黎明, 驱动装·山吹, 炽翎, 月轮, 白夜执事, 血舞, 犹大的誓约, 樱花的誓约, 轩辕剑, 太虚之握, 天火圣裁, 劫灭, 黑渊白花, 永寂之赫勒尔, 睡美人, 雷刀·鬼角, 双枪, 太刀, 重炮, 大剑, 拳套, 十字架, 镰刀, 骑枪, 导弹, 崩坏兽, 泰坦, 机甲, 帝王级崩坏兽, 审判级崩坏兽, 迦尼萨, 帕凡提, 毗湿奴, 阿湿波, 贝纳勒斯, 空之律者, 西琳, 芽衣, 雷电芽衣, 琪亚娜·卡斯兰娜, 布洛妮娅·扎伊切克, 无量塔姬子, 德丽莎·阿波卡利斯, 符华, 八重樱, 卡莲·卡斯兰娜, 奥托·阿波卡利斯, 瓦尔特·杨, 逆熵, 天命, 北美支部, 极东支部, 欧洲支部, 亚洲支部, 圣芙蕾雅学园, 千羽学园, 长空市, 沧海市, 崩坏3, 米哈游, 动作游戏, ACT, 养成, 抽卡, 深渊, 战场, 记忆战场, 迪拉克之海, 量子之海, 虚数空间, 世界蛇, 凯文, 灰蛇, 胡狼, 渡鸦, 安娜, 琥珀, 奥托, 阿波卡利斯, 卡莲, 八重樱, 八重村, 神之键, 黑渊白花, 天火圣裁, 犹大的誓约, 轩辕剑, 太虚之握, 第零额定功率, 女武神装甲, 核心, 必杀技, 闪避, 格挡, 连击, 暴击, 伤害, 生命值, 护盾, 能量, SP, 崩坏结晶, 材料, 武器, 圣痕, 皮肤, 服装, 武器池, 角色池, 保底, 抽卡, 十连, 单抽, UP, 限定, 常驻, 补给, 精准补给, 扩充补给, 新手补给, 回归补给, 活动, 主线剧情, 支线剧情, 活动剧情, 漫画, 动画, 短片, 崩坏3rd, 后崩坏书, 星门, 芽衣的火锅, 琪亚娜的泡面, 布洛妮娅的游戏, 德丽莎的苦瓜汁, 符华的泡面, 姬子的红酒, 八重樱的团子, 卡莲的面包, 奥托的阴谋, 凯文的计划, 世界蛇的目标, 逆熵的理念, 天命的秩序, 崩坏的真相, 终焉的降临, 始源的诞生, 琪亚娜的成长, 芽衣的觉醒, 布洛妮娅的坚强, 符华的守护, 姬子的牺牲, 德丽莎的温柔, 八重樱的执念, 卡莲的正义, 奥托的救赎, 崩坏能污染, 免疫崩坏, 圣痕计划, 方舟计划, 火种计划, 恒沙计划, 十三英杰, 凯文, 苏, 华, 爱莉希雅, 梅, 逐火之蛾, 前文明, 文明, 毁灭, 重生, 希望, 未来, 守护, 超限武器, 圣痕词缀, 作战凭证, 记忆战场, 开放世界委托, 家园补给, 宿舍事件, 神之键阁, 虚空万藏, 往世乐土, 侵蚀之律者, 约束之律者, 维尔薇, 千劫, 阿波尼亚, 伊甸
+二次元分区·二游专区·星穹铁道
+开拓者, 星, 穹, 三月七, 丹恒, 瓦尔特, 姬子, 杰帕德, 布洛妮娅, 希儿, 银狼, 罗刹, 白露, 青雀, 素裳, 彦卿, 景元, 符玄, 镜流, 刃, 卡芙卡, 卢卡, 桑博, 希露瓦, 佩拉, 艾丝妲, 黑塔, 星核, 星神, 命途, 开拓, 毁灭, 存护, 虚无, 丰饶, 巡猎, 智识, 欢愉, 记忆, 秩序, 贪饕, 纳努克, 毁灭星神, 亚尔达, 存护星神, 克利珀, 虚无星神, 丰饶星神, 药师, 巡猎星神, 岚, 智识星神, 博识尊, 欢愉星神, 阿哈, 记忆星神, 浮黎, 秩序星神, 太一, 贪饕星神, 翁法罗斯, 星穹铁道, 银河, 星系, 星球, 空间站, 黑塔空间站, 雅利洛-VI, 贝洛伯格, 上层区, 下层区, 永冬岭, 雪原, 冰雪, 寒潮, 裂界, 怪物, 反物质军团, 虚数之树, 量子之海, 星核猎手, 萨姆, 星核感染, 光锥, 遗器, 位面球, 连结绳, 头, 手, 身体, 脚, 套装, 效果, 行迹, 天赋, 普攻, 战技, 终结技, 秘技, 能量, 生命值, 护盾, 攻击力, 防御力, 速度, 暴击率, 暴击伤害, 效果命中, 效果抵抗, 物理伤害, 元素, 物理, 火, 冰, 雷, 风, 量子, 虚数, 伤害类型, 弱点, 韧性, 破盾, 击破, 击破伤害, DOT, 持续伤害, 治疗, 回血, 复活, 增益, 减益, 控制, 眩晕, 冰冻, 减速, 禁锢, 魅惑, 恐惧, 嘲讽, 沉默, 模拟宇宙, 寰宇蝗灾, 黄金时刻, 差分宇宙, 混沌回忆, 忘却之庭, 深渊, 副本, 关卡, BOSS, 精英怪, 小怪, 怪物, 敌人, NPC, 任务, 主线任务, 支线任务, 日常任务, 委托, 活动, 版本更新, 新角色, 新光锥, 新遗器, 新地图, 新剧情, 新玩法, 福利, 奖励, 星琼, 车票, 星轨通票, 专票, 抽卡, 十连, 单抽, UP, 限定, 常驻, 角色池, 光锥池, 保底, 大保底, 小保底, 歪卡, 命中, 出金, 出货, 米哈游, 崩坏：星穹铁道, RPG, 回合制, 开放世界, 银河冒险, 太空, 星际, 列车, 星穹列车, 帕姆, 列车长, 照相机, 击云, 手杖, 咖啡帽, 壁垒, 小提琴, 双枪, 键盘, 棺木, 衔药龙, 麻将牌, 剑器, 燕归来, 石火梦身, 玄微算盘, 昙华, 支离, 冲锋枪, 拳套, 飞刀, 电吉他, 摄像机, 天文望远镜, 黑塔人偶, 空间站的机器人, 贝洛伯格的民众, 银鬃铁卫, 守护者, 大守护者, 可可利亚, 虎克, 开拓者的伙伴, 星神的信徒, 命途的行者, 星核的危机, 匹诺康尼, 螺丝星, 星际和平公司, 流光忆庭, 泯灭帮, 纯美骑士团, 博识学会, 天才俱乐部
+二次元分区·二游专区·绝区零
+绳匠, 哲, 铃, 安比, 比利, 珂蕾妲, 安东, 妮可, 艾莲, 莱卡恩, 猫又, 虎鲸, 狼, 狐狸, 兔子, 猫, 犬, 熊, 龙, 凤凰, 新艾利都, 空洞, 虚空, 异界, 怪物, 异象, 都市, 城市, 街道, 建筑, 六分街, 空洞观测站, 对空洞作战特化区域, Hollows, 灾变, 灾害, 危险, 生存, 冒险, 战斗, 代理人, 阵营, 白祇重工, 维多利亚家政, 狡兔屋, 对空万事屋, 青豆事务所, 星见雅, 简, 朱鸢, 格莉丝, 妮娜, 派派, 莱特, 卢修斯, 伊芙琳, 露西, 皮埃尔, 柏妮思, 曼尼, 凯撒, 本, 乔, 武器系统, 驱动盘, 邦布, 宠物, 伙伴, 支援, 普攻, 战技, 终结技, 连携技, 闪避, 格挡, 反击, 暴击, 伤害, 生命值, 护盾, 能量, 以太, 以太属性, 物理属性, 火属性, 冰属性, 雷属性, 风属性, 属性伤害, 弱点, 破防, 失衡, 眩晕, 冰冻, 减速, 控制, 增益, 减益, 治疗, 回血, 复活, 剧情, 主线, 支线, 活动, 任务, 委托, 日常, 周常, 副本, 关卡, BOSS, 精英怪, 小怪, 空洞生物, 异界生物, 灾变生物, 城市怪物, 街头混混, 黑帮, 公司, 组织, 势力, 政府, 军队, 警察, 特工, 特务, 侦探, 赏金猎人, 米哈游, 绝区零, 动作游戏, ACT, 开放世界, 都市奇幻, 赛博朋克, 近未来, 都市冒险, 空洞探索, 抽卡, 养成, 皮肤, 服装, 材料, 道具, 背包, 仓库, 商店, 交易, 货币, 菲林, 金币, 银币, 铜币, 钻石, 水晶, 补给, 十连, 单抽, UP, 限定, 常驻, 保底, 大保底, 小保底, 出金, 出货, 歪卡, 命中, 偷渡, 沉船, 新艾利都的居民, 绳匠的能力, 空洞的秘密, 灾变的真相, 代理人的故事, 阵营的纷争, 城市的危机, 世界的命运, 冒险的旅程, 伙伴的羁绊, 狡兔屋, 白祇重工, 维多利亚家政, 对空万事屋, 青豆事务所, 六分街, 空洞, 观测站, 武器库, 驱动盘, 邦布, 猫又, 虎鲸, 莱卡恩, 星见雅, 简, 朱鸢, 新艾利都的天空, 空洞的黑暗, 以太的光芒, 强化特殊技, 连携技, 极限闪避, 紊乱, 侵蚀, 支援突击, 邦布连携, 音擎, 唱片, 以太适性
+二次元分区·二游专区·明日方舟
+博士, 阿米娅, 凯尔希, 陈, 星熊, 夜莺, 闪灵, 银灰, 初雪, 崖心, 能天使, 德克萨斯, 拉普兰德, 双狼, 企鹅物流, 罗德岛, 医疗, 近卫, 重装, 狙击, 术士, 先锋, 辅助, 特种, 干员, 精英, 精英化, 等级, 专精, 模组, 天赋, 潜能, 信赖, 好感度, 皮肤, 服装, 立绘, 原画, CG, 剧情, 主线, 支线, 活动, 插曲, 别传, 故事集, 危机合约, 肉鸽, 集成战略, 傀影与猩红孤钻, 水月与深蓝之树, 探索者的银凇止境, 萨卡兹, 瓦伊凡, 菲林, 阿斯兰, 乌萨斯, 黎博利, 萨科塔, 阿戈尔, 伊比利亚, 莱塔尼亚, 维多利亚, 乌萨斯, 炎国, 东国, 萨尔贡, 哥伦比亚, 玻利瓦尔, 莱茵生命, 黑钢国际, 喀兰贸易, 格拉斯哥帮, 推进之王, 维娜, 诗怀雅, 龙门, 近卫局, 感染者, 矿石病, 源石, 源石技艺, 法术, 魔法, 天灾, 灾变, 灾害, 末日, 生存, 冒险, 战斗, 策略, 塔防, 手游, 鹰角网络, 明日方舟, RPG, 养成, 抽卡, 十连, 单抽, UP, 限定, 常驻, 保底, 大保底, 小保底, 出金, 出货, 歪卡, 命中, 罗德岛的舰桥, 阿米娅的兔耳, 能天使的铳, 德克萨斯的剑, 拉普兰德的狼, 银灰的雪豹, 初雪的山羊, 夜莺的鸟, 闪灵的剑, 白面鸮的猫头鹰, 华法琳的血魔, 可露希尔的商店, 梓兰的秘书, 阿米娅的戒指, 博士的办公室, 罗德岛的宿舍, 基建, 制造站, 贸易站, 发电站, 宿舍, 办公室, 训练室, 加工站, 会客室, 无人机, 源石虫, 弑君者, W, 霜星, 浮士德, 梅菲斯特, 塔露拉, 爱国者, 大爹, 整合运动, 反派, BOSS, 精英怪, 小怪, 敌人, 地图, 关卡, 三星, 四星, 五星, 六星, 干员星级, 招募, 公开招募, 高级资深干员, 资深干员, 新手, tag, 标签, 词条, 招募券, 理智, 体力, 原石, 合成玉, 龙门币, 材料, 芯片, 酮, 铁, 糖, 聚酸酯, 异铁, 研磨石, RMA70-12, 源石碎片, 家具, 装饰, 皮肤券, 寻访凭证, 十连寻访凭证, 活动奖励, 签到奖励, 日常任务, 周常任务, 主线任务, 支线任务, 剧情任务, 隐藏任务, 成就, 勋章, 名片, 头像, 头像框, 铭牌, 背景, 主题, 音效, BGM, 音乐, 动画, 漫画, 小说, 设定集, 官方周边, 谷子, 手办, 海报, 立牌, 徽章, 挂件, 明日方舟的世界, 泰拉大陆, 源石的秘密, 矿石病的真相, 感染者的命运, 罗德岛的使命, 博士的指挥, 干员的羁绊, 守护与救赎, 希望与未来, Mon3tr, 赤霄, 般若, 黑角, 巡林者, Castle-3, Lancet-2, 医疗小车, 近卫小车, 罗德岛临时招募, 公开招募标签, 线索
+二次元分区·二游专区·终末地
+终末地, 明日方舟：终末地, 鹰角网络, 开放世界, RPG, 生存, 冒险, 探索, 建造, 养成, 塔卫二, 泰拉, 终末的世界, 末日, 灾变, 废墟, 遗迹, 荒野, 森林, 沙漠, 海洋, 山脉, 城市, 建筑, 文明, 毁灭, 重生, 希望, 生存, 挑战, 管理员, 主角, 玩家, 干员, 伙伴, NPC, 敌人, 怪物, BOSS, 战斗, 技能, 道具, 材料, 资源, 采集, 制作, 建造, 基地, 据点, 营地, 房屋, 设施, 工坊, 仓库, 农场, 牧场, 发电站, 科技, 源石, 源石技艺, 法术, 魔法, 能力, 天赋, 专精, 等级, 经验, 任务, 主线, 支线, 活动, 剧情, 故事, 世界观, 设定, 背景, 秘密, 阵营, 势力, 组织, 国家, 部落, 联盟, 敌人, 反派, 英雄, 传奇, 解谜, 寻宝, 旅行, 地图, 地标, 传送点, 锚点, 七天神像, 天气, 昼夜, 季节, 环境, 生态, 生物, 动物, 植物, 魔物, 武器, 防具, 饰品, 套装, 属性, 强化, 升级, 进阶, 突破, 抽卡, 角色池, 武器池, 保底, 十连, 单抽, UP, 限定, 常驻, 货币, 金币, 水晶, 原石, 合成玉, 道具, 背包, 仓库, 商店, 交易, 社交, 组队, 联机, 多人, 合作, PVP, PVE, 副本, 关卡, 终末地的世界, 塔卫二的秘密, 终末的真相, 文明的存续, 管理员的使命, 集成工业, 自动化生产线, 源石引擎, 塔卫二观测站
+二次元分区·二游专区·鸣潮
+漂泊者, 今州, 云垂, 鸣潮, 库洛游戏, 开放世界, RPG, 动作游戏, ACT, 养成, 抽卡, 探索, 冒险, 战斗, 解谜, 剧情, 声骸, 漂泊者, 主角, 玩家, 秧秧, 炽霞, 散华, 白芷, 吟霖, 凌阳, 秋水, 维里奈, 卡卡罗, 渊武, 莫特斐, 丹瑾, 安可, 菲比, 椿, 折枝, 相里要, 今州, 云垂, 璃州, 沧州, 燕州, 幽州, 中州, 益州, 荆州, 扬州, 地图, 场景, 城市, 乡村, 森林, 沙漠, 海洋, 山脉, 河流, 湖泊, 废墟, 遗迹, 秘境, 副本, 关卡, BOSS, 精英怪, 小怪, 怪物, 声骸, 鸣潮, 潮汐, 灾变, 灾害, 末日, 生存, 危机, 世界, 世界观, 设定, 声能, 能量, 元素, 属性, 物理, 火, 冰, 雷, 风, 水, 伤害, 攻击, 防御, 生命值, 护盾, 暴击, 暴击率, 暴击伤害, 攻击力, 防御力, 普攻, 重击, 战技, 终结技, 闪避, 格挡, 反击, 连携, 共鸣, 单手剑, 双手剑, 长柄武器, 法器, 弓, 枪, 刀, 剑, 锤, 声骸, 套装, 效果, 属性, 强化, 升级, 进阶, 突破, 材料, 道具, 星级, 等级, 经验, 天赋, 共鸣链, 命座, 皮肤, 服装, 十连, 单抽, UP, 限定, 常驻, 保底, 大保底, 小保底, 出金, 出货, 歪卡, 命中, 偷渡, 沉船, 抽卡记录, 货币, 星声, 金币, 银币, 原石, 水晶, 材料, 道具, 背包, 仓库, 商店, 交易, NPC, 任务, 主线, 支线, 日常, 周常, 活动, 福利, 奖励, 签到, 成就, 勋章, 头像, 头像框, 名片, 背景, 主题, 音乐, BGM, 动画, CG, 剧情动画, 过场动画, 战斗动画, 技能特效, 光影, 画面, 画质, 库洛游戏, 鸣潮, 今州的故事, 漂泊者的冒险, 鸣潮的秘密, 灾变的真相, 守护世界的使命, 伙伴的羁绊, 探索未知的世界, 创造新的未来, 今州的城市, 云垂的森林, 璃州的沙漠, 沧州的海洋, 燕州的山脉, 幽州的雪原, 中州的平原, 益州的盆地, 荆州的湖泊, 扬州的水乡, 鸣潮的潮汐, 声能的波动, 声骸技能, 协奏能量, 变奏技能, 延奏技能, 钩索, 滑翔, 感知, 数据坞, 葫芦
+二次元分区·二游专区·战双帕米什
+战双帕米什, 库洛游戏, 动作游戏, ACT, RPG, 养成, 抽卡, 科幻, 赛博朋克, 末日, 帕米什, 病毒, 帕米什病毒, 感染, 灾变, 灾害, 废墟, 城市, 地球, 空中花园, 空间站, 太空, 宇宙, 星球, 人类, 幸存者, 反抗军, 军队, 政府, 构造体, 人形, 机器人, 义体, 改造人, 战士, 战斗, 必杀技, 指挥官, 主角, 玩家, 露西亚, 丽芙, 卡列尼娜, 比安卡, 神威, 里, 乱数, 烬燃, 黎明, 极光, 暗能, 仰光, 流光, 蚀暗, 爆裂, 脉冲, 超刻, 深痕, 囚影, 森息, 万华, 遥星之座, 极昼, 绯耀, 荣光, 鸦羽, 朱云流霭, 太刀, 双刀, 大剑, 枪, 炮, 弓, 拳套, 锤子, 法杖, 意识, 圣痕, 套装, 效果, 属性, 强化, 升级, 进阶, 突破, 材料, 星级, 等级, 经验, 天赋, 链结, 命座, 皮肤, 服装, 十连, 单抽, UP, 限定, 常驻, 保底, 大保底, 小保底, 出金, 出货, 歪卡, 命中, 偷渡, 沉船, 抽卡记录, 货币, 黑卡, 金币, 银币, 水晶, 道具, 背包, 仓库, 商店, 交易, NPC, 任务, 主线, 支线, 日常, 周常, 活动, 福利, 奖励, 签到, 成就, 勋章, 头像, 头像框, 名片, 背景, 主题, 音乐, BGM, 动画, CG, 剧情动画, 过场动画, 战斗动画, 技能特效, 光影, 画面, 画质, 帧率, 副本, 关卡, BOSS, 精英怪, 小怪, 怪物, 感染体, 机械, 机器人, 机甲, 战场, 深渊, 战区, 囚笼, 排行榜, 排名, 积分, 奖励, 段位, 等级, 剧情, 故事, 世界观, 设定, 背景, 秘密, 真相, 使命, 命运, 希望, 战双帕米什的世界, 帕米什病毒的威胁, 空中花园的希望, 指挥官的指挥, 构造体的战斗, 守护人类的使命, 伙伴的羁绊, 对抗病毒的勇气, 重建家园的决心, 未来的光明, 露西亚的太刀, 丽芙的法杖, 卡列尼娜的大炮, 比安卡的弓箭, 神威的大剑, 里的双枪, 乱数的机械臂, 烬燃的火焰, 黎明的剑光, 极光的护盾, 暗能的黑暗, 仰光的光芒, 流光的治愈, 蚀暗的暗影, 爆裂的爆炸, 脉冲的雷电, 超刻的力量, 深痕的利刃, 囚影的速度, 森息的自然, 万华的幻术, 遥星之座的飞船, 极昼的阳光, 绯耀的烈焰, 荣光的骑士, 鸦羽的寒冰, 朱云流霭的云雾, 空中花园的空间站, 地球的废墟, 红莲, 鸦羽, 深红之渊, 银冕, 绯耀, 极昼, 遥星, 超刻, 万华
+二次元分区·二游专区·异环
+异环, 紫龙游戏, 战棋, SRPG, 策略, 回合制, 幻想, 奇幻, 世界观, 设定, 阿尔特里亚, 大陆, 世界, 地图, 场景, 城市, 乡村, 森林, 沙漠, 海洋, 山脉, 河流, 湖泊, 城堡, 遗迹, 秘境, 副本, 关卡, BOSS, 精英怪, 小怪, 怪物, 敌人, 英雄, 战士, 法师, 弓箭手, 骑士, 牧师, 刺客, 盗贼, 猎人, 召唤师, 主角, 玩家, 指挥官, 伙伴, NPC, 阵营, 势力, 国家, 王国, 帝国, 联盟, 部落, 反派, 传奇, 故事, 剧情, 主线, 支线, 活动, 任务, 冒险, 探索, 解谜, 战斗, 魔法, 法术, 元素, 属性, 伤害, 抽卡, 养成, 角色池, 武器池, 保底, 十连, 单抽, UP, 限定, 常驻, 货币, 金币, 水晶, 钻石, 材料, 道具, 背包, 仓库, 商店, 交易, 异环的世界, 阿尔特里亚的冒险, 策略的对决, 英雄的传说, 守护世界的使命, 伙伴的羁绊, 对抗黑暗的勇气, 重建和平的希望, 异环的旅程, 紫龙的新作
+二次元分区·二游专区·碧蓝航线
+碧蓝航线, 蛮啾网络, 悠星, 海战, 舰娘, 拟人, 二次元, 养成, 抽卡, 射击, 横版射击, 海战游戏, 手游, 驱逐舰, 巡洋舰, 战列舰, 航空母舰, 潜艇, 战列巡洋舰, 轻型航母, 重巡洋舰, 轻巡洋舰, 维修舰, 补给舰, 防空巡洋舰, 反潜驱逐舰, 鱼雷艇, 炮艇, 企业, 约克城, 大黄蜂, 埃塞克斯, 大凤, 赤城, 加贺, 翔鹤, 瑞鹤, 信浓, 大和, 武藏, 长门, 陆奥, 俾斯麦, 提尔皮茨, 欧根亲王, 沙恩霍斯特, 格奈森瑙, 威尔士亲王, 伊丽莎白女王, 胡德, 声望, 反击, 皇家方舟, 光辉, 胜利, 可畏, 不挠, 独角兽, 拉菲, 标枪, Z23, 绫波, 吹雪, 夕立, 时雨, 岛风, 雪风, 长门, 陆奥, 伊势, 日向, 扶桑, 山城, 金刚, 比睿, 榛名, 雾岛, 爱宕, 高雄, 摩耶, 鸟海, 妙高, 那智, 足柄, 羽黑, 古鹰, 加古, 青叶, 衣笠, 三隈, 最上, 三井, 铃谷, 熊野, 利根, 筑摩, 大淀, 阿武隈, 川内, 神通, 那珂, 五十铃, 夕张, 长良, 名取, 由良, 鬼怒, 阿贺野, 能代, 矢矧, 酒匂, 初春, 子日, 若叶, 初霜, 白露, 时雨, 夕立, 海风, 山风, 江风, 凉风, 冬月, 秋月, 照月, 凉月, 初月, 新月, 天城, 赤城, 加贺, 苍龙, 飞龙, 翔鹤, 瑞鹤, 祥凤, 瑞凤, 龙凤, 海鹰, 隼鹰, 神鹰, 大鹰, 云鹰, 冲鹰, 千岁, 千代田, 瑞穗, 日进, 碧蓝航线的世界, 碧蓝的海洋, 舰娘的冒险, 海战的传奇, 守护海洋的使命, 伙伴的羁绊, 对抗塞壬的勇气, 和平的希望, 碧蓝的旅程, 蛮啾的游戏, 塞壬, 敌人, 反派, BOSS, 精英怪, 小怪, 海战, 战斗, 弹幕, 大招, 必杀技, 鱼雷, 炮弹, 航空炸弹, 舰载机, 飞机, 航母, 战舰, 道具, 材料, 升级, 进阶, 突破, 改造, 觉醒, 十连, 单抽, UP, 限定, 常驻, 保底, 大保底, 小保底, 出金, 出货, 歪卡, 命中 , 欧, 非, 非洲人, 欧洲人, 偷渡, 沉船, 抽卡记录, 货币, 钻石, 金币, 银币, 石油, 燃料, 道具, 背包, 仓库, 商店, 交易, NPC, 任务, 主线, 支线, 日常, 周常, 活动, 福利, 奖励, 签到, 成就, 勋章, 头像, 头像框, 名片, 背景, 主题, 音乐, BGM, 动画, CG, 剧情动画, 过场动画, 战斗动画, 技能特效, 画面, 画质, 立绘
+二次元分区·二游专区·蔚蓝档案
+蔚蓝档案, Nexon, Yostar, 二次元, 养成, 抽卡, 回合制, RPG, 学园, 都市, 基沃托斯, 学园都市, 阿拜多斯, 砂狼白子, 黑馆羽留奈, 浅黄睦月, 奥空绫音, 兔女郎, 学园, 学生, 老师, 主角, 玩家, 夏莱, 联邦搜查部, 三一综合学园, 格黑娜学园, 阿拜多斯高等学院, 千年科学学园, 瓦尔基里, 百鬼夜行, 下总, 红莲, 户外族, 正义实现委员会, 游戏开发部, 便利屋68, 神秘部, 图书馆, 学生会, 会长, 副会长, 书记, 会计, 干事, 社团, 活动, 任务, 剧情, 主线, 支线, 活动剧情, 故事, 世界观, 设定, 背景, 秘密, 真相, 使命, 命运, 学生, NPC, 敌人, 怪物, BOSS, 精英怪, 小怪, 战斗, 普攻, 战技, 终结技, EX技能, 必杀技, 闪避, 格挡, 反击, 暴击, 伤害, 生命值, 护盾, 能量, SP, 攻击力, 防御力, 速度, 暴击率, 暴击伤害, 属性, 火, 冰, 雷, 风, 光, 暗, 属性伤害, 弱点, 破防, 失衡, 眩晕, 冰冻, 减速, 控制, 增益, 减益, 治疗, 回血, 复活, buff, debuff, 装备, 武器, 防具, 饰品, 套装, 效果, 强化, 升级, 进阶, 材料, 道具, 资源, 采集, 制作, 合成, 分解, 背包, 仓库, 商店, 十连, 单抽, UP, 限定, 常驻, 保底, 大保底, 小保底, 出金, 出货, 歪卡, 命中, 欧, 非, 非洲人, 欧洲人, 偷渡, 沉船, 抽卡记录, 货币, 青辉石, 金币, 银币, 水晶, 材料, 道具, 信用点, 采购点, 钻石, 任务, 日常任务, 周常任务, 主线任务, 支线任务, 活动任务, 委托, 挑战, 副本, 关卡, 竞技场, PVP, PVE, 排行榜, 排名, 积分, 奖励, 段位, 等级, 经验, 星级, 天赋, 羁绊, 好感度, 信赖, 皮肤, 服装, 立绘, CG, 动画, 剧情动画, 过场动画, 战斗动画, 技能特效, 画面, 画质, 音乐, BGM, 蔚蓝档案的世界, 基沃托斯的学园都市, 老师的使命, 学生们的故事, 学园的日常, 冒险的旅程, 守护的决心, 伙伴的羁绊, 青春的校园, 未来的希望, 砂狼白子的摩托车, 黑馆羽留奈的火箭炮, 浅黄睦月的炸弹, 奥空绫音的无人机, 夏莱的办公室, 阿拜多斯的沙漠, 三一的教堂, 格黑娜的地狱, 千年的实验室, 瓦尔基里的训练场, 百鬼夜行的神社, 下总的忍者村, 红莲的战场, 户外族的露营地, 游戏开发部的游戏机, 便利屋68的事务所, 神秘部的图书馆, 学生会的会议室, 学园的教室, 校园的操场
+二次元分区·动漫/小说/漫画专区
+凡人修仙传, 韩立, 南宫婉, 厉飞雨, 紫灵, 元瑶, 慕沛灵, 陈巧倩, 董萱儿, 墨居仁, 乱星海, 天南, 灵界, 仙界, 修仙, 炼气, 筑基, 金丹, 元婴, 化神, 炼虚, 合体, 大乘, 渡劫, 功法, 法术, 法宝, 丹药, 符箓, 阵法, 飞剑, 灵兽, 妖兽, 魔族, 妖族, 人族, 修仙界, 门派, 宗门, 家族, 火影忍者, 鸣人, 佐助, 小樱, 卡卡西, 凯, 自来也, 纲手, 大蛇丸, 鼬, 宇智波, 千手, 漩涡, 木叶, 忍者, 忍术, 血继限界, 写轮眼, 白眼, 轮回眼, 海贼王, 路飞, 索隆, 娜美, 乌索普, 山治, 乔巴, 罗宾, 弗兰奇, 布鲁克, 草帽海贼团, 罗杰, 白胡子, 香克斯, 艾斯, 萨博, 海军, 七武海, 四皇, 伟大航路, 鬼灭之刃, 炭治郎, 祢豆子, 善逸, 伊之助, 富冈义勇, 蝴蝶忍, 无惨, 鬼, 鬼杀队, 柱, 呼吸法, 日轮刀, 血鬼术, 无限列车, 游郭篇, 锻刀村篇, 柱训练篇, 决战篇, 进击的巨人, 艾伦, 三笠, 阿尔敏, 利威尔, 埃尔文, 韩吉, 巨人, 调查兵团, 墙壁, 玛利亚之墙, 罗塞之墙, 希娜之墙, 始祖巨人, 进击的巨人, 超大型巨人, 铠之巨人, 女型巨人, 兽之巨人, 车力巨人, 刀剑神域, 桐人, 亚丝娜, SAO, ALO, GGO, UW, VRMMO, 游戏, 刀剑, 精灵, 魔法, 剑技, 双刀流, 神域, 艾恩葛朗特, 浮游城, 桐谷和人, 结城明日奈, 西莉卡, 我的英雄学院, 绿谷出久, 爆豪胜己, 轰焦冻, 欧尔麦特, 敌联盟, 英雄, 个性, 雄英高中, ONE FOR ALL, 全职猎人, 小杰, 奇犽, 酷拉皮卡, 雷欧力, 猎人, 念能力, 贪婪之岛, 友克鑫市, 幻影旅团, 龙珠, 悟空, 贝吉塔, 悟饭, 悟天, 特兰克斯, 布尔玛, 琪琪, 龟仙人, 比克, 赛亚人, 超级赛亚人, 龙珠, 神龙, 地球, 那美克星, 弗利萨, 沙鲁, 魔人布欧, GT, 名侦探柯南, 柯南, 小兰, 新一, 毛利小五郎, 灰原哀, 服部平次, 基德, 侦探, 案件, 真相, 推理, 密室, 凶手, 毒药, 凶器, 线索, 证据, 警视厅, 少年侦探团, 间谍过家家, 黄昏, 约尔, 阿尼亚, 福杰, 间谍, 杀手, 超能力, 家庭, 任务, 伊甸学园, 星星, 面试, 家庭教师, 女儿, 妻子, 父亲, 母亲, 日常, 搞笑, 咒术回战, 虎杖悠仁, 伏黑惠, 钉崎野蔷薇, 五条悟, 夏油杰, 咒术师, 咒灵, 咒力, 领域展开, 特级咒灵, 咒术高专, 东京, 京都, 两面宿傩, 伏魔御厨子, 黑闪, 术式, 反转术式, 无量空处, 灌篮高手, 樱木花道, 流川枫, 赤木刚宪, 三井寿, 宫城良田, 湘北, 篮球, 比赛, 全国大赛, 灌篮, 篮板, 投篮, 传球, 运球, 扣篮, 三分球, 罚球, 教练, 樱木军团, 数码宝贝, 太一, 大和, 素娜, 光子郎, 美美, 阿助, 阿武, 嘉儿, 数码兽, 亚古兽, 加布兽, 巴鲁兽, 甲虫兽, 比丘兽, 哥玛兽, 巴达兽, 迪路兽, 进化, 数码世界, 神奇宝贝, 小智, 皮卡丘, 小刚, 小霞, 宝可梦, 精灵, 御三家, 火箭队, 博士, 图鉴, 道馆, 联盟, 冠军, 进化, mega进化, 极巨化, 地区, 冒险, 旅行, eva, 碇真嗣, 绫波丽, 明日香, 渚薰, 葛城美里, 碇源堂, EVA, 机甲, 使徒, NERV, SEELE, 人类补完计划, AT力场, 朗基努斯之枪, 卡巴拉生命之树, 第三新东京市, 要塞, 天使, 狐妖小红娘, 白月初, 涂山苏苏, 涂山红红, 东方月初, 王权富贵, 清瞳, 涂山, 狐妖, 红线仙, 一人之下, 张楚岚, 冯宝宝, 王也, 张灵玉, 诸葛青, 异人, 炁, 八奇技, 天师府, 罗天大醮, 哪都通, 全性, 甲申之乱, 冯宝宝的身世, 张楚岚的阳五雷, 王也的风后奇门, 诸葛青的武侯奇门, 张灵玉的阴五雷, 夏禾的刮骨刀, 灵笼, 马克, 冉冰, 猎荒者, 灯塔, 地面, 玛娜生态, 噬极兽, 脊骨, 白月魁, 临渊者, 生命源质, 灵笼世界, 吞噬星空, 罗峰, 洪, 雷神, 宇宙, 星空, 武者, 精神念师, 黑神套装, HR联盟, 极限武馆, 雷电武馆, 怪兽, 兽潮, 涅槃, 封王, 封侯, 宇宙级, 域主, 三体, 叶文洁, 罗辑, 三体人, 黑暗森林, 降维打击, 智子, 水滴, 二向箔, 红岸基地, 流浪地球, 刘培强, 吴京, 木星, 空间站, 发动机, 流浪计划, 火种计划, 饱和式救援, 哪吒之魔童降世, 哪吒, 敖丙, 李靖, 殷夫人, 太乙真人, 申公豹, 陈塘关, 天劫, 魔丸, 姜子牙, 小九, 九尾狐, 封神榜, 昆仑, 北海, 天梯, 封神大战, 白蛇：缘起, 白素贞, 许仙, 小青, 法海, 五百年, 西湖, 断桥, 油纸伞, 妖, 青蛇：劫起, 司马, 蒙面少年, 修罗城, 执念, 轮回, 雾山五行, 闻人翊悬, 申屠子夜, 公仪楚人, 容成墨熙, 轩辕神君, 五行, 妖兽, 雾山, 阴阳, 枕刀歌, 何方知, 罗通, 白莲教, 江湖, 武侠, 刀, 剑, 恩怨, 复仇, 画江湖之不良人, 李星云, 姬如雪, 张子凡, 陆林轩, 不良帅, 不良人, 大唐, 天罡诀, 华阳针法, 龙泉剑, 不良旗, 玄冥教, 通文馆, 幻音坊, 万毒窟, 十二峒, 岐王, 斗罗大陆, 唐三, 小舞, 戴沐白, 朱竹清, 奥斯卡, 宁荣荣, 马红俊, 史莱克七怪, 斗罗, 武魂, 魂环, 魂技, 武魂殿, 海神, 修罗神, 天使神, 杀神领域, 蓝银草, 昊天锤, 唐门, 斗破苍穹, 萧炎, 药老, 萧薰儿, 美杜莎, 纳兰嫣然, 云韵, 吴昊, 琥乾, 迦南学院, 斗气, 斗技, 异火, 焚诀, 云岚宗, 乌坦城, 萧家, 蛇人族, 丹王古河, 完美世界, 石昊, 火灵儿, 云曦, 清漪, 石毅, 柳神, 补天术, 至尊骨, 荒天帝, 下界, 上界, 九天十地, 仙域, 异域, 黑暗动乱, 终极一战, 独断万古, 遮天, 叶凡, 姬紫月, 庞博, 无始大帝, 狠人大帝, 虚空大帝, 九龙拉棺, 北斗, 紫微星, 源天师, 圣体, 霸体, 混沌体, 天庭, 瑶池, 不死天皇, 帝尊, 飞仙星, 成仙路
+二次元分区·二次元衍生事物专区
+谷子, 周边, 手办, 模型, 粘土人, figma, 景品, 一番赏, 海报, 明信片, 书签, 徽章, 吧唧, 挂件, 钥匙扣, 立牌, 亚克力, 色纸, 签名板, 文件夹, 笔记本, 笔, 文具, 胶带, 贴纸, 贺卡, 日历, 台历, 挂历, 抱枕, 靠垫, 床单, 被套, 毛巾, 浴巾, 拖鞋, 睡衣, 服装, cos服, cosplay, 假发, 美瞳, 道具, 铠甲, 头饰, 首饰, 项链, 手链, 戒指, 耳环, 耳钉, 胸针, 别针, 挂饰, 摆件, 拼装模型, 高达, 机甲模型, 车模, 航模, 船模, 兵人, 人偶, 娃娃, 漫展, Comic Market, CP, BW, CJ, 漫展门票, 摊位, 摊主, coser, 摄影师, 返图, 场照, 正片, cosplay比赛, 宅舞, 唱见, 舞见, 声优, 歌手, 乐队, live, 演唱会, 音乐会, 见面会, 签售会, 握手会, 线下活动, 主题咖啡厅, 动漫咖啡厅, 女仆咖啡厅, 执事咖啡厅, 主题餐厅, 主题酒店, 主题民宿, 二次元穿搭, 洛丽塔, JK制服, DK制服, 汉服, 和服, 古风穿搭, 软妹穿搭, 原宿风, 涩谷风, 辣妹风, y2k, 千禧风, 复古风, 二次元服饰, 动漫T恤, 卫衣, 外套, 裤子, 裙子, 鞋子, 袜子, 帽子, 包包, 配饰, 眼镜, 耳机, 手机壳, 平板壳, 电脑壳, 鼠标, 键盘, 音响, 游戏机, 掌机, PSP, PSV, Switch, PS, Xbox, Steam, 游戏, 动漫, 漫画, 小说, 轻小说, 文库本, 漫画单行本, 漫画杂志, 动画, OVA, 剧场版, 电影, 特典, BD, DVD, CD, OST, 原声音乐, 角色歌, 广播剧, Drama, 声优见面会, 动画音乐节, 动漫展会, 同人本, 同人志, 同人游戏, 同人音乐, 同人周边, 二创, 二次创作, 同人文, 同人图, 手书, MAD, AMV, MMD, PV, MV, 动画短片, 漫画条漫, 四格漫画, 插画, 原画, 设定集, 美术集, 公式书, 攻略本, 资料集, 访谈集, ACGN, 御宅族, 宅, 二次元文化, 亚文化, 潮流, 时尚, 二次元周边, 动漫周边, 游戏周边, 小说周边, 漫画周边, 手办周边, cosplay周边, 漫展周边, 同人周边, 官方周边, 谷子周边, 吧唧周边, 立牌周边, 挂件周边, 海报周边, 明信片周边, 徽章周边, 钥匙扣周边, 漫展活动, 线下漫展, 线上漫展, 云漫展, 漫展直播, 漫展返图, 漫展场照, 漫展正片, 漫展摊位, cosplay活动, cosplay比赛, cosplay正片, cosplay场照, cosplay道具, cosplay服装, cosplay假发, cosplay美瞳, cosplay化妆, cosplay摄影, 二次元穿搭, 洛丽塔穿搭, JK穿搭, DK穿搭, 汉服穿搭, 和服穿搭, 古风穿搭, 原宿穿搭, 涩谷穿搭, y2k穿搭, ACGN媒介, 漫画杂志, 动画杂志, 游戏杂志, 小说杂志, 文库本, 单行本, 同人本, 同人志, 二创作品, 二次创作, 二次元衍生事物, 周边产品, 文创产品, 动漫文创, 游戏文创, 小说文创, 漫画文创, 手办文创, cosplay文创, 漫展文创
+二次元分区·虚拟偶像/Vtuber专区
+Vtuber, 虚拟主播, 虚拟偶像, 中之人, 皮套, Live2D, 3D模型, 动捕, 动作捕捉, 面部捕捉, 直播, 录播, 剪辑, 切片, 二创, 同人, 周边, 手办, 谷子, 吧唧, YouTube, B站, 抖音, 快手, 虎牙, 斗鱼, Twitch, 直播平台, 粉丝, 观众, SC, Super Chat, 醒目留言, 打赏, 礼物, 舰长, 提督, 总督, 粉丝牌, 弹幕, 弹幕互动, 直播互动, 连麦, 联动, 合唱, 游戏联动, 线下活动, 演唱会, 见面会, 签售会, 中V, 中国Vtuber, 日V, 日本Vtuber, 虚拟女团, 虚拟男团, 个人势, 企业势, 社团势, 箱推, Hololive, Cover, Hololive EN, Hololive JP, Hololive ID, Gawr Gura, Amelia Watson, Ina'nis, Kiara, Calliope, Hoshimachi Suisei, Sora, Miko, Pekora, Rushia, Aqua, Shion, Marine, Fubuki, Okayu, Nekoma, Nijisanji, にじさんじ, 彩虹社, Nijisanji EN, Nijisanji JP, Nijisanji ID, Nijisanji KR, Kanae, Kuzuha, LazuLight, OBSYDIA, Ethyria, Iluna, XSOLEIL, Vox Akuma, Mysta Rias, Luxiem, Noctyx, Alban Knox, Ike Eveland, Luca Kaneshiro, Fulgur Ovid, Uki Violeta, Reimu Endou, Elira Pendora, Pomu Rainpuff, Petra Gurin, Rosemi Lovelock, Finana Ryugu, Hanasaki Momo, Suzuka Utako, Akai Haato, Natsuiro Matsuri, Yukihana Lamy, Amane Kanata, Tsunomaki Watame, Tokoyami Towa, Himemori Luna, La+ Darknesss, Takane Lui, Hakui Koyori, Sakamata Chloe, Kazama Iroha, Houshou Marine, Shirakami Fubuki, Nakiri Ayame, Yagyuu Kokoro, Inugami Korone, Usada Pekora, 中国Vtuber, A-SOUL, 贝拉, 珈乐, 嘉然, 向晚, 乃琳, 乐华娱乐, 虚拟偶像女团, 枝江, Akie秋绘, 向晚大魔王, 贝拉kira, 乃琳Queen, 珈乐Carol, ASOUL, A-SOUL二创, A-SOUL周边, A-SOUL直播, A-SOUL演唱会, EveOneCat, 猫又, B站虚拟主播, 抖音虚拟主播, 快手虚拟主播, 虚拟UP主, VUP, UP主, B站UP主, 虚拟主播道具, 麦克风, 耳机, 摄像头, 动捕设备, 面部捕捉设备, 动作捕捉设备, 电脑, 直播软件, OBS, 直播界面, 虚拟主播工作内容, 直播, 录播, 剪辑, 二创, 粉丝互动, 广告, 商单, 代言, 周边制作, 歌曲录制, MV拍摄, 动画制作, 游戏直播, 唱歌, 跳舞, 聊天, 虚拟主播相关, 中之人, 皮套, Live2D, 3D模型, 动捕, 直播, 录播, 切片, 二创, 粉丝, 虚拟偶像, 虚拟团体, 虚拟女团, 虚拟男团, 虚拟组合, 虚拟歌手, 虚拟乐队, 虚拟DJ, 虚拟演员, 虚拟主持人, 虚拟主播文化, V圈, V圈文化, 粉丝文化, 宅文化, 二次元文化, 亚文化, 网络文化, 直播文化, 偶像文化, 虚拟主播术语, 中之人, 皮套, 盒, 开盒, 人肉, 隐私, 保密, 毕业, 引退, 复活, 回归, 新皮, 新衣装, 3D化, 3D直播, 演唱会, 线下活动, 联动, 连麦, 合唱, 游戏联动, SC, Super Chat, 醒目留言, 打赏, 礼物, 舰长, 提督, 总督, 大航海, 粉丝牌, 弹幕, 弹幕互动, 直播互动, 同接, 在线人数, 热度, 流量, 播放量, 点赞, 投币, 收藏, 转发, 评论, 关注, 粉丝, 观众, DD, 谁都喜欢, 单推, 推, 本命, 墙头, 箱推, 全员推, P家, 所属, 社团, 企业, 公司, 事务所, 运营, 中之人, 皮套, Live2D, 3D模型, 动捕, 面部捕捉, 动作捕捉, 虚拟形象, 虚拟化身, 数字人, 虚拟人, 数字偶像
+二次元分区·二游通用黑话专区
+抽卡, 十连, 单抽, UP, 限定, 常驻, 保底, 大保底, 小保底, 出金, 出货, 歪卡, 命中, 偷渡, 沉船, 抽卡记录, 抽卡模拟器, 抽卡概率, 卡池, 角色池, 武器池, 圣遗物池, 遗器池, 装备池, UP池, 限定池, 常驻池, 新手池, 回归池, 活动池, 联动池, 复刻池, 返场, 限定返场, 复刻, 复刻活动, 原石, 星琼, 黑卡, 青辉石, 钻石, 水晶, 金币, 银币, 铜币, 货币, 纠缠之缘, 相遇之缘, 星轨通票, 专票, 寻访凭证, 十连寻访凭证, 补给券, 抽奖券, 兑换券, 代币, 养成, 升级, 进阶, 突破, 进化, 觉醒, 升星, 星级, 等级, 经验, 天赋, 技能, 专精, 链结, 命座, 共鸣链, 行迹, 模组, 圣痕, 遗器, 驱动盘, 声骸, 圣遗物, 套装, 效果, 属性, 强化, 附魔, 镶嵌, 精炼, 武器, 装备, 防具, 饰品, 法器, 太刀, 剑, 枪, 弓, 炮, 角色, 干员, 舰娘, 学生, 代理人, 开拓者, 旅行者, 主角, 玩家, 指挥官, 奶妈, 奶, 盾, 坦克, 输出, C位, DPS, 副C, 辅助, 拐, 增伤, 减抗, 破防, 失衡, 眩晕, 冰冻, 减速, 控制, 增益, 减益, buff, debuff, 护盾, 治疗, 回血, 复活, 无敌, 闪避, 格挡, 反击, 暴击, 暴击率, 暴击伤害, 攻击力, 防御力, 生命值, 速度, 元素精通, 元素充能, 效果命中, 效果抵抗, 属性伤害, 物理伤害, 元素, 火, 冰, 雷, 风, 水, 岩, 量子, 虚数, 光, 暗, 弱点, 破盾, 韧性, 击破, DOT, 持续伤害, 战技, 普攻, 重击, 终结技, 必杀技, EX技能, 技能, 天赋, 被动, 主动, 连携技, 联动技, 合体技, QTE, 闪避, 冲刺, 跳跃, 攀爬, 游泳, 飞行, 开放世界, 地图, 探索, 解谜, 宝箱, 仙灵, 传送锚点, 七天神像, 地标, 秘境, 副本, 关卡, BOSS, 精英怪, 小怪, 怪物, 敌人, PVE, PVP, 竞技场, 深渊, 深境螺旋, 忘却之庭, 混沌回忆, 迪拉克之海, 战区, 囚笼, 排行榜, 排名, 积分, 活动, 版本更新, 新角色, 新武器, 新地图, 新剧情, 新玩法, 福利, 奖励, 签到, 日常任务, 周常任务, 主线任务, 支线任务, 委托, 成就, 勋章, 头像, 头像框, 名片, 皮肤, 服装, 立绘, CG, 动画, 剧情, 故事, 世界观, 设定, 背景, 米哈游, 鹰角网络, 库洛游戏, 蛮啾网络, 悠星, Nexon, Yostar, 紫龙游戏, 游戏公司, 开发商, 手游, 手机游戏, 端游, 电脑游戏, 主机游戏, 单机游戏, 网络游戏, RPG, ACT, FPS, TPS, MOBA, SLG, SRPG, RTS, FTG, 音游, 赛车游戏, 体育游戏, 模拟游戏, 抽卡游戏, 养成游戏, 开放世界游戏, 回合制游戏, 动作游戏, 策略游戏, 塔防游戏, 海战游戏, 射击游戏, 冒险游戏, 二游, 二次元游戏, ACGN游戏, 动漫游戏, 漫画游戏, 小说游戏, IP游戏, 改编游戏, 原创游戏, 同人游戏, 游戏黑话, 游戏术语, 游戏名词, 游戏内容, 玩法, 机制, 系统, 界面, UI, 操作, 手柄, 键盘, 鼠标, 触屏, 控制器, 摇杆, 按键, 触控, 操作方式, 游戏设备, 手机, 电脑, 主机, 掌机, 平板, Switch, PS, Xbox, Steam, Epic, 游戏平台, 应用商店, TapTap, 好游快爆, 九游, 4399, 7723, 游戏盒子, 游戏助手, 攻略, wiki, 攻略站, 论坛, 社区, 贴吧, NGA, 178, B站, 抖音, 快手, 游戏主播, 游戏UP主, 游戏解说, 游戏视频, 游戏直播, 游戏剪辑, 游戏切片, 游戏二创, 游戏同人, 游戏周边, 游戏氪金, 充值, 付费, 内购, 微氪, 中氪, 重氪, 氪佬, 土豪, 零氪, 白嫖, 嫖, 免费, 福利, 活动奖励, 签到奖励, 成就奖励, 任务奖励, 宝箱奖励, 探索奖励, 肝, 护肝, 养肝, 护肝片, 秃头, 肝帝, 爆肝, 熬夜, 通宵, 日常, 周常, 每日, 每周, 每月, 赛季, 赛季通行证, 战令, 通行证, 等级, 奖励, 角色强度, T0, T1, T2, T3, 人权卡, 限定人权, 常驻人权, 下水道, 仓管, 板凳, 退环境, 环境, 版本之子, 版本答案, 强势, 弱势, 平衡, 调整, 补丁, 更新, bug, 反馈, 修复, 优化, 维护, 停服, 开服, 新服, 开新服, 炸服, 服务器, 卡顿, 延迟, 掉线, 闪退, 黑屏, 漏洞, 外挂, 脚本, 作弊, 封号, 禁言, 处罚, 违规, 合规, 审核, 监管, 家长, 防沉迷, 游戏健康, 游戏时长, 游戏限制, 未成年人, 青少年, 健康系统, 防沉迷系统, 实名认证, 身份证, 人脸识别
+常规用词·生活常见名词
+水蜜桃, 苹果, 香蕉, 橙子, 葡萄, 西瓜, 草莓, 蓝莓, 樱桃, 芒果, 菠萝, 梨, 桃, 杏, 李子, 梅子, 枣, 椰子, 柠檬, 柚子, 橘子, 西柚, 火龙果, 猕猴桃, 榴莲, 山竹, 荔枝, 龙眼, 枇杷, 桑葚, 蔓越莓, 葡萄干, 枸杞, 红枣, 手机, 电脑, 平板, 耳机, 音响, 鼠标, 键盘, 充电器, 充电宝, 数据线, 电视, 冰箱, 洗衣机, 空调, 风扇, 热水器, 微波炉, 烤箱, 电饭煲, 电磁炉, 锅, 碗, 瓢, 盆, 筷子, 勺子, 叉子, 刀子, 砧板, 菜刀, 桌子, 椅子, 沙发, 床, 衣柜, 书架, 书桌, 梳妆台, 茶几, 电视柜, 杯子, 水壶, 保温杯, 水杯, 茶杯, 酒杯, 饮料瓶, 矿泉水瓶, 奶茶杯, 咖啡杯, 奶茶, 咖啡, 茶, 果汁, 可乐, 雪碧, 汽水, 啤酒, 白酒, 红酒, 蛋糕, 面包, 饼干, 糖果, 巧克力, 冰淇淋, 雪糕, 甜品, 零食, 小吃, 火锅, 烧烤, 烤肉, 牛排, 意面, 披萨, 汉堡, 薯条, 炸鸡, 米饭, 面条, 饺子, 包子, 馒头, 花卷, 馄饨, 汤圆, 粽子, 月饼, 汽车, 火车, 飞机, 轮船, 自行车, 电动车, 摩托车, 地铁, 公交, 出租车, 书包, 背包, 钱包, 钥匙, 锁, 雨伞, 太阳伞, 帽子, 眼镜, 口罩, 衣服, 裤子, 裙子, 鞋子, 袜子, 内衣, 外套, 毛衣, 卫衣, 衬衫, 化妆品, 护肤品, 口红, 粉底, 眼影, 腮红, 眉笔, 眼线, 睫毛膏, 防晒霜, 洗发水, 护发素, 沐浴露, 洗面奶, 牙膏, 牙刷, 毛巾, 浴巾, 肥皂, 洗手液, 书本, 笔记本, 笔, 铅笔, 钢笔, 圆珠笔, 马克笔, 荧光笔, 尺子, 橡皮, 篮球, 足球, 羽毛球, 乒乓球, 网球, 游泳, 跑步, 健身, 瑜伽, 舞蹈, 电影, 电视剧, 音乐, 歌曲, 游戏, 动漫, 漫画, 小说, 杂志, 报纸, 猫, 狗, 兔子, 仓鼠, 龙猫, 鸟, 鱼, 乌龟, 蛇, 蜥蜴, 花, 草, 树, 玫瑰, 牡丹, 菊花, 梅花, 兰花, 荷花, 向日葵, 太阳, 月亮, 星星, 天空, 云, 雨, 雪, 风, 雷, 电, 山, 河, 湖, 海, 森林, 沙漠, 草原, 平原, 盆地, 高原, 学校, 大学, 中学, 小学, 幼儿园, 教室, 操场, 图书馆, 食堂, 宿舍, 公司, 办公室, 工厂, 商店, 超市, 商场, 酒店, 餐厅, 医院, 银行, 公园, 动物园, 植物园, 博物馆, 美术馆, 电影院, 剧院, 体育馆, 游泳馆, 妈妈, 爸爸, 爷爷, 奶奶, 外公, 外婆, 哥哥, 姐姐, 弟弟, 妹妹, 朋友, 同学, 同事, 老师, 学生, 医生, 护士, 警察, 司机, 厨师
+常规用词·抽象/特殊名词
+开塞露, 5090显卡, RTX5090, CPU, GPU, 主板, 内存, 硬盘, SSD, HDD, 电源, 机箱, 散热器, 水冷, 风冷, 显示器, 键盘, 鼠标, 耳机, 音响, 路由器, 交换机, 光猫, 网线, WiFi, 蓝牙, 5G, 4G, 3G, 6G, 人工智能, AI, 大模型, ChatGPT, 文心一言, 通义千问, 豆包, 讯飞星火, 百度文心, 阿里通义, 元宇宙, VR, AR, MR, XR, 虚拟人, 数字人, NFT, 区块链, 比特币, 以太坊, 加密货币, 数字货币, 央行数字货币, 数字人民币, 支付宝, 微信支付, 银行卡, 信用卡, 借记卡, 股票, 基金, 债券, 期货, 期权, 理财, 存款, 贷款, 房贷, 车贷, 保险, 社保, 云服务, 云计算, 大数据, 物联网, 边缘计算, 自动驾驶, 无人机, 扫地机器人, 空气炸锅, 筋膜枪, 机械键盘, 电竞椅, 显卡坞, 游戏本, 轻薄本, iPhone, iPad, MacBook, AirPods, Apple Watch, 鸿蒙, 安卓, iOS, Windows, Linux, 微信, QQ, 抖音, 小红书, B站, 微博, 豆瓣, 知乎, 贴吧, 虎扑, Discord, Telegram, Zoom, 钉钉, 飞书, 内卷, 躺平, 摆烂, 佛系, 破防, emo, 社恐, 社牛, 绝绝子, YYDS, 栓Q, 芭比Q, 大冤种, 刺客, 雪糕刺客, 文具刺客, 盲盒, 一番赏, 泡泡玛特, 潮玩, 数字藏品, 元宇宙房产, 虚拟土地, 生成式AI, Stable Diffusion, Midjourney, DALL·E, Copilot, Apple Intelligence, 小爱同学, 天猫精灵, Siri, Alexa, 流媒体, 网盘, 云盘, 5G-A, Wi-Fi 7, 折叠屏, 曲面屏, 高刷屏, MINI-LED, OLED, 快充, 氮化镓, 无线充, 磁吸, C口, 特斯拉, 蔚来, 理想, 小鹏, 比亚迪, 电子烟, 螺蛳粉, 自热火锅, 预制菜, 老干妈, 辣条, 钟薛高, 酱香拿铁, 生椰拿铁, 飞盘, 露营, 滑雪, 冲浪, 潜水, 剧本杀, 密室逃脱, 桌游, 跑团, 战棋, AI绘画, AI写小说, 数字人直播, 虚拟制片, 动作捕捉, 表情包, 梗图, 鬼畜, 二创, 同人, 社死, 显眼包, 特种兵旅游, city walk, gap year, 整顿职场, 精神离职, 向上管理, 颗粒度, 抓手`;
+
+      // 解析词库
+      const categories = [];
+      const lines = rawData.trim().split('\n');
+      let currentCat = null;
+      for (let line of lines) {
+        line = line.trim();
+        if (line === '') continue;
+        if (line.startsWith('二次元分区') || line.startsWith('常规用词')) {
+          if (currentCat) categories.push(currentCat);
+          currentCat = { name: line, words: [] };
+        } else if (currentCat) {
+          const words = line.split(',').map(w => w.trim()).filter(w => w.length > 0);
+          currentCat.words.push(...words);
+        }
+      }
+      if (currentCat) categories.push(currentCat);
+
+      // ---------- DOM 元素 ----------
+      const pages = {
+        home: document.getElementById('homePage'),
+        players: document.getElementById('playersPage'),
+        categories: document.getElementById('categoriesPage'),
+        gameView: document.getElementById('gameViewPage'),
+        discuss: document.getElementById('discussPage'),
+        result: document.getElementById('resultPage')
+      };
+      const playerCountDisplay = document.getElementById('playerCountDisplay');
+      const categoryListContainer = document.getElementById('categoryListContainer');
+      const viewPrompt = document.getElementById('viewPrompt');
+      const wordDisplayArea = document.getElementById('wordDisplayArea');
+      const civilianWordDisplay = document.getElementById('civilianWordDisplay');
+      const spyWordDisplay = document.getElementById('spyWordDisplay');
+      const nextHint = document.getElementById('nextHint');
+      const viewNextBtn = document.getElementById('viewNextBtn');
+      const resultTitle = document.getElementById('resultTitle');
+      const revealWord = document.getElementById('revealWord');
+      const rulesModal = document.getElementById('rulesModal');
+      const settingsModal = document.getElementById('settingsModal');
+      const accuseModal = document.getElementById('accuseModal');
+      const accusePlayerList = document.getElementById('accusePlayerList');
+
+      // ---------- 游戏状态 ----------
+      let playerCount = 3;
+      let excludedIndices = new Set(); // 被排除的分类索引
+      let currentCivilianWord = '';
+      let spyPlayerIndex = 1; // 1~n
+      let currentViewPlayer = 1;
+      let viewStep = 0; // 0:等待点击查看, 1:已显示词语, 2:可切换下一位
+      let gameActive = false;
+
+      // ---------- 工具函数 ----------
+      function showPage(pageId) {
+        Object.values(pages).forEach(p => p.classList.remove('active'));
+        const target = document.getElementById(pageId);
+        if (target) target.classList.add('active');
+      }
+
+      function openModal(modal) { modal.classList.add('active'); }
+      function closeModal(modal) { modal.classList.remove('active'); }
+
+      function getAvailableWords() {
+        const pool = [];
+        categories.forEach((cat, idx) => {
+          if (!excludedIndices.has(idx)) {
+            pool.push(...cat.words);
+          }
+        });
+        return pool;
+      }
+
+      function randomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      function startNewRound() {
+        const words = getAvailableWords();
+        if (words.length === 0) {
+          alert('当前词条范围为空，请调整排除设置！');
+          return false;
+        }
+        currentCivilianWord = words[randomInt(0, words.length - 1)];
+        spyPlayerIndex = randomInt(1, playerCount);
+        currentViewPlayer = 1;
+        viewStep = 0;
+        gameActive = true;
+        updateGameView();
+        showPage('gameViewPage');
+        return true;
+      }
+
+      function updateGameView() {
+        viewPrompt.textContent = `你是 ${currentViewPlayer} 号玩家，请查看自己的词语，注意不要被别人看到！`;
+        wordDisplayArea.style.display = 'none';
+        viewNextBtn.textContent = '点击查看词语';
+        viewNextBtn.style.display = 'block';
+        viewStep = 0;
+      }
+
+      function revealCurrentPlayerWord() {
+        const isSpy = (currentViewPlayer === spyPlayerIndex);
+        wordDisplayArea.style.display = 'flex';
+        if (isSpy) {
+          civilianWordDisplay.style.display = 'none';
+          spyWordDisplay.style.display = 'block';
+          spyWordDisplay.textContent = '🕵️ 你是卧底！隐藏自己，猜出他们的小心思！';
+          nextHint.textContent = '查看完毕后点击屏幕并传递给下一位玩家';
+        } else {
+          civilianWordDisplay.style.display = 'block';
+          spyWordDisplay.style.display = 'none';
+          civilianWordDisplay.textContent = currentCivilianWord;
+          nextHint.textContent = '查看完毕后点击屏幕并传递给下一位玩家';
+        }
+        viewNextBtn.textContent = '传递给下一位玩家';
+        viewStep = 1;
+      }
+
+      function goToNextPlayerOrDiscuss() {
+        if (currentViewPlayer < playerCount) {
+          currentViewPlayer++;
+          updateGameView();
+        } else {
+          // 所有玩家查看完毕，进入讨论环节
+          showPage('discussPage');
+        }
+      }
+
+      function resetGameToCategories() {
+        showPage('categoriesPage');
+        gameActive = false;
+        renderCategoryList();
+      }
+
+      function backToHome() {
+        showPage('homePage');
+        gameActive = false;
+      }
+
+      // 设置主题
+      function applyTheme(primaryColor, darkMode) {
+        document.documentElement.style.setProperty('--primary', primaryColor);
+        document.documentElement.style.setProperty('--primary-rgb', primaryColor.replace('#','').match(/.{2}/g).map(v=>parseInt(v,16)).join(','));
+        if (darkMode) {
+          document.body.classList.add('dark');
+        } else {
+          document.body.classList.remove('dark');
+        }
+        localStorage.setItem('wwd_primary', primaryColor);
+        localStorage.setItem('wwd_dark', darkMode ? '1' : '0');
+        updateColorDotSelection(primaryColor);
+      }
+
+      function updateColorDotSelection(color) {
+        document.querySelectorAll('#themeColorPicker .color-dot').forEach(dot => {
+          dot.classList.toggle('selected', dot.dataset.color === color);
+        });
+      }
+
+      // 加载设置
+      const savedPrimary = localStorage.getItem('wwd_primary') || '#66CCFF';
+      const savedDark = localStorage.getItem('wwd_dark') === '1';
+      applyTheme(savedPrimary, savedDark);
+
+      // 渲染分类列表
+      function renderCategoryList() {
+        categoryListContainer.innerHTML = '';
+        categories.forEach((cat, idx) => {
+          const div = document.createElement('div');
+          div.className = 'category-item';
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.id = `cat-${idx}`;
+          checkbox.checked = excludedIndices.has(idx);
+          checkbox.addEventListener('change', (e) => {
+            if (e.target.checked) excludedIndices.add(idx);
+            else excludedIndices.delete(idx);
+          });
+          const label = document.createElement('label');
+          label.htmlFor = `cat-${idx}`;
+          label.textContent = `不要 ${cat.name} 相关词条`;
+          div.appendChild(checkbox);
+          div.appendChild(label);
+          categoryListContainer.appendChild(div);
+        });
+      }
+
+      // 指认弹窗
+      function openAccuseModal() {
+        accusePlayerList.innerHTML = '';
+        for (let i = 1; i <= playerCount; i++) {
+          const btn = document.createElement('button');
+          btn.className = 'btn small';
+          btn.textContent = `${i} 号玩家`;
+          btn.style.margin = '0.3rem';
+          btn.addEventListener('click', () => {
+            closeModal(accuseModal);
+            handleAccuse(i);
+          });
+          accusePlayerList.appendChild(btn);
+        }
+        openModal(accuseModal);
+      }
+
+      function handleAccuse(selectedPlayer) {
+        const isSpy = (selectedPlayer === spyPlayerIndex);
+        endGame(isSpy ? '平民胜利！' : '卧底胜利！');
+      }
+
+      function handleGuessWord(guessedWord) {
+        const trimmed = guessedWord.trim();
+        if (trimmed === currentCivilianWord) {
+          endGame('卧底胜利！');
+        } else {
+          endGame('平民胜利！');
+        }
+      }
+
+      function endGame(title) {
+        gameActive = false;
+        resultTitle.textContent = title;
+        revealWord.textContent = currentCivilianWord;
+        showPage('resultPage');
+      }
+
+      // ---------- 事件绑定 ----------
+      document.getElementById('startGameBtn').addEventListener('click', () => {
+        showPage('playersPage');
+      });
+
+      document.getElementById('rulesBtn').addEventListener('click', () => openModal(rulesModal));
+      document.getElementById('closeRules').addEventListener('click', () => closeModal(rulesModal));
+      document.getElementById('followBtn').addEventListener('click', () => {
+        window.open('https://space.bilibili.com/1444391042', '_blank');
+      });
+      document.getElementById('settingsBtn').addEventListener('click', () => openModal(settingsModal));
+      document.getElementById('closeSettings').addEventListener('click', () => closeModal(settingsModal));
+
+      // 人数选择
+      document.getElementById('minusBtn').addEventListener('click', () => {
+        if (playerCount > 3) { playerCount--; playerCountDisplay.textContent = playerCount; }
+      });
+      document.getElementById('plusBtn').addEventListener('click', () => {
+        if (playerCount < 20) { playerCount++; playerCountDisplay.textContent = playerCount; }
+      });
+      document.getElementById('confirmPlayersBtn').addEventListener('click', () => {
+        renderCategoryList();
+        showPage('categoriesPage');
+      });
+      document.getElementById('backToHome1').addEventListener('click', backToHome);
+      document.getElementById('backToPlayers').addEventListener('click', () => showPage('playersPage'));
+
+      document.getElementById('resetExcludeBtn').addEventListener('click', () => {
+        excludedIndices.clear();
+        renderCategoryList();
+      });
+
+      document.getElementById('startGameAfterCategories').addEventListener('click', () => {
+        if (startNewRound()) {
+          // 成功
+        }
+      });
+
+      // 查看词语流程
+      viewNextBtn.addEventListener('click', () => {
+        if (!gameActive) return;
+        if (viewStep === 0) {
+          revealCurrentPlayerWord();
+        } else if (viewStep === 1) {
+          goToNextPlayerOrDiscuss();
+        }
+      });
+
+      // 讨论环节
+      document.getElementById('findSpyBtn').addEventListener('click', openAccuseModal);
+      document.getElementById('guessWordBtn').addEventListener('click', () => {
+        const word = prompt('请输入你认为的平民词：');
+        if (word !== null && word.trim() !== '') {
+          handleGuessWord(word);
+        }
+      });
+      document.getElementById('closeAccuse').addEventListener('click', () => closeModal(accuseModal));
+
+      // 结果页按钮
+      document.getElementById('playAgainBtn').addEventListener('click', () => {
+        if (startNewRound()) {}
+      });
+      document.getElementById('homeAfterResult').addEventListener('click', backToHome);
+      document.getElementById('followAfterResult').addEventListener('click', () => {
+        window.open('https://space.bilibili.com/1444391042', '_blank');
+      });
+
+      // 设置主题色
+      document.querySelectorAll('#themeColorPicker .color-dot').forEach(dot => {
+        dot.addEventListener('click', () => {
+          const color = dot.dataset.color;
+          const isDark = document.body.classList.contains('dark');
+          applyTheme(color, isDark);
+        });
+      });
+      document.getElementById('lightModeBtn').addEventListener('click', () => {
+        const primary = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
+        applyTheme(primary, false);
+      });
+      document.getElementById('darkModeBtn').addEventListener('click', () => {
+        const primary = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
+        applyTheme(primary, true);
+      });
+
+      // 点击模态框背景关闭
+      window.addEventListener('click', (e) => {
+        if (e.target === rulesModal) closeModal(rulesModal);
+        if (e.target === settingsModal) closeModal(settingsModal);
+        if (e.target === accuseModal) closeModal(accuseModal);
+      });
+
+      // 初始显示首页
+      showPage('homePage');
+    })();
+  </script>
+</body>
+</html>
+```
